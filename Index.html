@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مصروفاتي</title>
+<meta name="theme-color" content="#F3F1E4">
+<meta name="description" content="تتبع مصروفاتك الشهرية بسهولة">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E">
+<link id="manifestLink" rel="manifest">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#F3F1E4;
+    --paper-2:#EAE6D4;
+    --card:#FBFAF3;
+    --ink:#1F2A24;
+    --muted:#7A7A68;
+    --line:#C9C2AC;
+    --green:#2F6B4F;
+    --green-soft:#DCE9DF;
+    --amber:#C98A2B;
+    --amber-soft:#F3E3C4;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 0 0, rgba(47,107,79,.05), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(201,138,43,.06), transparent 40%);
+    color:var(--ink);
+    font-family:'Tajawal', sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    padding-bottom:100px;
+  }
+  h1,h2,h3,.display{ font-family:'Cairo', sans-serif; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  header{
+    padding:24px 20px 12px;
+    max-width:520px;
+    margin:0 auto;
+  }
+  header .eyebrow{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  header h1{
+    font-size:26px;
+    font-weight:900;
+    margin:2px 0 0;
+  }
+
+  main{ max-width:520px; margin:0 auto; padding:0 16px; }
+
+  /* --- Summary card --- */
+  .summary{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:22px;
+    padding:22px;
+    margin:14px 0 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .summary::after{
+    content:"";
+    position:absolute; left:-30px; bottom:-30px;
+    width:140px; height:140px;
+    background:radial-gradient(circle, rgba(47,107,79,.5), transparent 70%);
+  }
+  .summary-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    position:relative; z-index:1;
+  }
+  .summary-label{ font-size:12.5px; color:#B7C4BB; font-weight:700; }
+  .summary-amount{
+    font-family:'Cairo';
+    font-weight:900;
+    font-size:36px;
+    margin-top:4px;
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .summary-amount small{ font-size:15px; color:#B7C4BB; font-weight:500; }
+  .ring-wrap{ position:relative; width:64px; height:64px; flex-shrink:0; }
+  .ring-wrap svg{ transform:rotate(-90deg); }
+  .ring-pct{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; font-family:'Cairo';
+  }
+  .budget-row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:16px; padding-top:14px;
+    border-top:1px dashed rgba(255,255,255,.2);
+    position:relative; z-index:1;
+    font-size:13px;
+  }
+  .budget-row span:first-child{ color:#B7C4BB; }
+  .budget-row .edit-budget{
+    background:none; border:none; color:var(--paper);
+    text-decoration:underline; font-family:'Tajawal'; cursor:pointer;
+    font-size:13px;
+  }
+
+  /* --- Quick add --- */
+  .add-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:22px;
+  }
+  .add-form .row1{
+    display:flex; gap:10px; margin-bottom:10px;
+  }
+  .add-form input[type=text], .add-form input[type=number]{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 12px;
+    font-family:'Tajawal';
+    font-size:14.5px;
+    color:var(--ink);
+    outline:none;
+    width:100%;
+  }
+  .add-form input[type=number]{
+    font-family:'JetBrains Mono';
+    font-weight:700;
+    width:120px;
+    flex-shrink:0;
+  }
+  .add-form input:focus{ border-color:var(--green); }
+  .cat-chips{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; margin-bottom:12px;
+    scrollbar-width:none;
+  }
+  .cat-chips::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex-shrink:0;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+  }
+  .chip.active{
+    background:var(--green);
+    border-color:var(--green);
+    color:var(--paper);
+  }
+  .add-btn{
+    width:100%;
+    background:var(--green);
+    color:var(--paper);
+    border:none;
+    border-radius:12px;
+    padding:13px;
+    font-family:'Cairo';
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .add-btn:disabled{ opacity:.4; }
+  .add-btn:active{ transform:scale(.98); }
+
+  /* --- Section label --- */
+  .section-label{
+    font-size:13px; font-weight:700; color:var(--muted);
+    margin:4px 4px 10px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .section-label .filter-sel{
+    background:none; border:none; color:var(--green);
+    font-family:'Tajawal'; font-weight:700; font-size:13px;
+  }
+
+  /* --- Category bars --- */
+  .cat-bars{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:22px;
+  }
+  .cat-bar-row{ margin-bottom:12px; }
+  .cat-bar-row:last-child{ margin-bottom:0; }
+  .cat-bar-top{
+    display:flex; justify-content:space-between;
+    font-size:13.5px; margin-bottom:5px;
+  }
+  .cat-bar-top .amt{ font-family:'JetBrains Mono'; font-weight:700; }
+  .cat-bar-track{
+    height:8px; background:var(--paper-2); border-radius:99px; overflow:hidden;
+  }
+  .cat-bar-fill{ height:100%; border-radius:99px; background:var(--green); }
+
+  /* --- Receipt list --- */
+  .receipt{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    padding:6px 0 0;
+    position:relative;
+    margin-bottom:2px;
+  }
+  .receipt-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:13px 16px;
+    border-bottom:1px dashed var(--line);
+  }
+  .receipt-item:last-child{ border-bottom:none; }
+  .ri-left{ display:flex; align-items:center; gap:10px; }
+  .ri-icon{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--green-soft); color:var(--green);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0;
+  }
+  .ri-title{ font-size:14.5px; font-weight:600; }
+  .ri-sub{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .ri-amt{
+    font-family:'JetBrains Mono'; font-weight:700; font-size:15px;
+  }
+  .ri-del{
+    background:none; border:none; color:var(--muted);
+    font-size:15px; margin-right:8px; cursor:pointer; opacity:.5;
+  }
+  .receipt-tear{
+    height:14px;
+    background:
+      linear-gradient(-45deg, var(--paper) 6px, transparent 0),
+      linear-gradient(45deg, var(--paper) 6px, transparent 0);
+    background-size:14px 14px;
+    background-position:right;
+    background-color:var(--card);
+    margin-bottom:24px;
+  }
+
+  .empty{
+    text-align:center; color:var(--muted); padding:36px 20px; font-size:13.5px; line-height:1.9;
+  }
+  .empty .big{ font-size:34px; display:block; margin-bottom:6px; }
+
+  .install-card{
+    background:var(--amber-soft);
+    border:1px dashed var(--amber);
+    border-radius:16px;
+    padding:12px 14px;
+    font-size:13px;
+    color:#6B4A17;
+    display:none;
+    align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:16px;
+  }
+  .install-card.show{ display:flex; }
+  .install-card button{
+    background:var(--amber); color:#fff; border:none;
+    border-radius:9px; padding:8px 14px; font-family:'Cairo';
+    font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;
+  }
+
+  .month-nav{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    margin:0 0 8px;
+  }
+  .month-nav button{
+    background:var(--card); border:1px solid var(--line);
+    width:32px; height:32px; border-radius:9px;
+    font-size:15px; cursor:pointer; color:var(--ink);
+  }
+  .month-nav .month-label{
+    font-family:'Cairo'; font-weight:700; font-size:14.5px; min-width:120px; text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">📒 دفتر مصروفاتي</div>
+  <h1>مصروفاتي</h1>
+</header>
+
+<main>
+  <div class="install-card" id="installCard">
+    <span>ثبّت الموقع على شاشتك زي تطبيق عادي</span>
+    <button id="installBtn">تثبيت</button>
+  </div>
+
+  <div class="month-nav">
+    <button id="prevMonth">‹</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button id="nextMonth">›</button>
+  </div>
+
+  <div class="summary">
+    <div class="summary-top">
+      <div>
+        <div class="summary-label">اجمالي الصرف الشهر ده</div>
+        <div class="summary-amount"><span id="totalSpent">0</span><small>جنيه</small></div>
+      </div>
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#3a473f" stroke-width="7"/>
+          <circle id="ringProgress" cx="32" cy="32" r="26" fill="none" stroke="#2F6B4F" stroke-width="7" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="163.4"/>
+        </svg>
+        <div class="ring-pct" id="ringPct">0%</div>
+      </div>
+    </div>
+    <div class="budget-row">
+      <span>الميزانية: <b id="budgetLabel" class="mono">0</b> جنيه</span>
+      <button class="edit-budget" id="editBudget">تعديل</button>
+    </div>
+  </div>
+
+  <div class="add-form">
+    <div class="row1">
+      <input type="text" id="descInput" placeholder="على ايه؟ (مثلاً: أكل، مواصلات)">
+      <input type="number" id="amtInput" placeholder="٠٫٠٠" inputmode="decimal">
+    </div>
+    <div class="cat-chips" id="catChips"></div>
+    <button class="add-btn" id="addBtn" disabled>+ ضيف مصروف</button>
+  </div>
+
+  <div class="section-label">📊 حسب الفئة</div>
+  <div class="cat-bars" id="catBars"></div>
+
+  <div class="section-label">🧾 كل العمليات</div>
+  <div id="listWrap"></div>
+</main>
+
+<script>
+/* ---------------- PWA: inline manifest + service worker ---------------- */
+const manifest = {
+  name: "مصروفاتي",
+  short_name: "مصروفاتي",
+  description: "تتبع مصروفاتك الشهرية بسهولة",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#F3F1E4",
+  theme_color: "#F3F1E4",
+  dir: "rtl",
+  lang: "ar",
+  icons: [
+    {
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E",
+      sizes: "512x512",
+      type: "image/svg+xml",
+      purpose: "any maskable"
+    }
+  ]
+};
+document.getElementById('manifestLink').setAttribute('href',
+  'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
+
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'masrofaty-v1';
+    self.addEventListener('install', e => { self.skipWaiting(); });
+    self.addEventListener('activate', e => { self.clients.claim(); });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.open(CACHE).then(async cache => {
+          try {
+            const res = await fetch(e.request);
+            if (e.request.method === 'GET') cache.put(e.request, res.clone());
+            return res;
+          } catch (err) {
+            const cached = await cache.match(e.request);
+            return cached || Response.error();
+          }
+        })
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  });
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installCard').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installCard').classList.remove('show');
+});
+
+/* ---------------- App logic ---------------- */
+const EXP_KEY = 'masrofaty_expenses_v1';
+const BUDGET_KEY = 'masrofaty_budgets_v1'; // { "2026-08": 5000 }
+
+const CATEGORIES = [
+  { id:'food', label:'أكل', icon:'🍔' },
+  { id:'transport', label:'مواصلات', icon:'🚗' },
+  { id:'shopping', label:'تسوق', icon:'🛍️' },
+  { id:'bills', label:'فواتير', icon:'💡' },
+  { id:'health', label:'صحة', icon:'💊' },
+  { id:'fun', label:'ترفيه', icon:'🎮' },
+  { id:'other', label:'حاجات تانية', icon:'📦' },
+];
+
+function loadExpenses(){
+  try { return JSON.parse(localStorage.getItem(EXP_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveExpenses(list){ localStorage.setItem(EXP_KEY, JSON.stringify(list)); }
+function loadBudgets(){
+  try { return JSON.parse(localStorage.getItem(BUDGET_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveBudgets(b){ localStorage.setItem(BUDGET_KEY, JSON.stringify(b)); }
+
+let expenses = loadExpenses();
+let budgets = loadBudgets();
+let selectedCat = CATEGORIES[0].id;
+let viewDate = new Date();
+viewDate.setDate(1);
+
+const descInput = document.getElementById('descInput');
+const amtInput = document.getElementById('amtInput');
+const addBtn = document.getElementById('addBtn');
+const catChips = document.getElementById('catChips');
+
+function monthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+const MONTH_NAMES = ['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'];
+
+CATEGORIES.forEach(cat=>{
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (cat.id===selectedCat ? ' active':'');
+  chip.dataset.id = cat.id;
+  chip.innerHTML = `<span>${cat.icon}</span><span>${cat.label}</span>`;
+  chip.addEventListener('click', ()=>{
+    selectedCat = cat.id;
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.id===cat.id));
+  });
+  catChips.appendChild(chip);
+});
+
+function validate(){
+  addBtn.disabled = !(descInput.value.trim() && parseFloat(amtInput.value) > 0);
+}
+descInput.addEventListener('input', validate);
+amtInput.addEventListener('input', validate);
+
+addBtn.addEventListener('click', ()=>{
+  const desc = descInput.value.trim();
+  const amount = parseFloat(amtInput.value);
+  if (!desc || !(amount > 0)) return;
+  expenses.unshift({
+    id:'e'+Date.now(),
+    desc, amount,
+    cat: selectedCat,
+    date: new Date().toISOString(),
+    monthKey: monthKey(viewDate)
+  });
+  saveExpenses(expenses);
+  descInput.value=''; amtInput.value='';
+  validate();
+  render();
+});
+
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  viewDate.setMonth(viewDate.getMonth()-1);
+  render();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  viewDate.setMonth(viewDate.getMonth()+1);
+  render();
+});
+
+document.getElementById('editBudget').addEventListener('click', ()=>{
+  const key = monthKey(viewDate);
+  const current = budgets[key] || '';
+  const val = prompt('حط ميزانية الشهر ده (بالجنيه):', current);
+  if (val === null) return;
+  const num = parseFloat(val);
+  if (!isNaN(num) && num >= 0){
+    budgets[key] = num;
+    saveBudgets(budgets);
+    render();
+  }
+});
+
+function fmt(n){
+  return n.toLocaleString('en-US', {maximumFractionDigits: n%1===0 ? 0 : 2});
+}
+
+function render(){
+  const key = monthKey(viewDate);
+  document.getElementById('monthLabel').textContent = `${MONTH_NAMES[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+
+  const monthExpenses = expenses.filter(e => (e.monthKey || monthKey(new Date(e.date))) === key)
+    .sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+  const total = monthExpenses.reduce((a,e)=>a+e.amount,0);
+  document.getElementById('totalSpent').textContent = fmt(total);
+
+  const budget = budgets[key] || 0;
+  document.getElementById('budgetLabel').textContent = fmt(budget);
+
+  const pct = budget > 0 ? Math.min(100, Math.round((total/budget)*100)) : 0;
+  const circumference = 163.4;
+  const offset = circumference - (pct/100)*circumference;
+  const ring = document.getElementById('ringProgress');
+  ring.style.strokeDashoffset = budget > 0 ? offset : circumference;
+  ring.setAttribute('stroke', pct >= 100 ? '#C0392B' : (pct >= 80 ? '#C98A2B' : '#2F6B4F'));
+  document.getElementById('ringPct').textContent = budget > 0 ? pct + '%' : '—';
+
+  // category bars
+  const catBars = document.getElementById('catBars');
+  const byCat = {};
+  monthExpenses.forEach(e=>{ byCat[e.cat] = (byCat[e.cat]||0) + e.amount; });
+  const activeCats = CATEGORIES.filter(c => byCat[c.id] > 0).sort((a,b)=> byCat[b.id]-byCat[a.id]);
+
+  if (!activeCats.length){
+    catBars.innerHTML = `<div class="empty" style="padding:14px 0;">لسه مفيش مصروفات مسجلة الشهر ده</div>`;
+  } else {
+    catBars.innerHTML = activeCats.map(c=>{
+      const amt = byCat[c.id];
+      const p = total ? Math.round((amt/total)*100) : 0;
+      return `
+        <div class="cat-bar-row">
+          <div class="cat-bar-top">
+            <span>${c.icon} ${c.label}</span>
+            <span class="amt">${fmt(amt)} <span style="color:var(--muted); font-weight:400;">(${p}%)</span></span>
+          </div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${p}%"></div></div>
+        </div>`;
+    }).join('');
+  }
+
+  // list
+  const listWrap = document.getElementById('listWrap');
+  if (!monthExpenses.length){
+    listWrap.innerHTML = `<div class="empty"><span class="big">🧾</span>لسه مفيش أي مصروف الشهر ده<br>ضيف أول مصروف من فوق</div>`;
+    return;
+  }
+  const receipt = document.createElement('div');
+  receipt.className = 'receipt';
+  monthExpenses.forEach(e=>{
+    const cat = CATEGORIES.find(c=>c.id===e.cat) || CATEGORIES[CATEGORIES.length-1];
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('ar-EG', { day:'numeric', month:'short' });
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    row.innerHTML = `
+      <div class="ri-left">
+        <div class="ri-icon">${cat.icon}</div>
+        <div>
+          <div class="ri-title">${escapeHtml(e.desc)}</div>
+          <div class="ri-sub">${cat.label} · ${dateStr}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <span class="ri-amt">${fmt(e.amount)}</span>
+        <button class="ri-del" data-id="${e.id}">🗑</button>
+      </div>
+    `;
+    receipt.appendChild(row);
+  });
+  listWrap.innerHTML = '';
+  listWrap.appendChild(receipt);
+  const tear = document.createElement('div');
+  tear.className = 'receipt-tear';
+  listWrap.appendChild(tear);
+
+  listWrap.querySelectorAll('.ri-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      expenses = expenses.filter(e=>e.id!==btn.dataset.id);
+      saveExpenses(expenses);
+      render();
+    });
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+render();
+</script>
+</body>
+  </html>
