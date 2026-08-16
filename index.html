@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#F3F1E4">
 <meta name="description" content="تتبع مصروفاتك الشهرية بسهولة">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E">
-<link id="manifestLink" rel="manifest">
+<link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -344,41 +344,15 @@
 </main>
 
 <script>
-/* ---------------- PWA: Inline Manifest ---------------- */
-const manifest = {
-  name: "مصروفاتي",
-  short_name: "مصروفاتي",
-  description: "تتبع مصروفاتك الشهرية بسهولة",
-  start_url: "/",
-  display: "standalone",
-  scope: "/", 
-  background_color: "#F3F1E4",
-  theme_color: "#F3F1E4",
-  dir: "rtl",
-  lang: "ar",
-  icons: [
-    {
-      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F6B4F'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23F3F1E4' font-family='Arial'%3E£%3C/text%3E%3C/svg%3E",
-      sizes: "512x512",
-      type: "image/svg+xml",
-      purpose: "any maskable"
-    }
-  ]
-};
-document.getElementById('manifestLink').setAttribute('href',
-  'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
-
-/* ---------------- Service Worker Registration ---------------- */
+/* ---------------- PWA: real manifest.json + real sw.js ---------------- */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // الرقم العشوائي "Date.now" بيجبر المتصفح ينزل نسخة جديدة فوراً
-    navigator.serviceWorker.register('sw.js?v=' + Date.now(), { scope: '/' })
-      .then(() => console.log('SW registered successfully'))
-      .catch((err) => console.log('SW registration failed:', err));
+    navigator.serviceWorker.register('./sw.js').catch((err)=>{
+      console.warn('SW registration failed:', err);
+    });
   });
 }
 
-/* ---------------- Install Prompt ---------------- */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -392,10 +366,13 @@ document.getElementById('installBtn').addEventListener('click', async () => {
   deferredPrompt = null;
   document.getElementById('installCard').classList.remove('show');
 });
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installCard').classList.remove('show');
+});
 
 /* ---------------- App logic ---------------- */
 const EXP_KEY = 'masrofaty_expenses_v1';
-const BUDGET_KEY = 'masrofaty_budgets_v1'; 
+const BUDGET_KEY = 'masrofaty_budgets_v1'; // { "2026-08": 5000 }
 
 const CATEGORIES = [
   { id:'food', label:'أكل', icon:'🍔' },
