@@ -344,13 +344,14 @@
 </main>
 
 <script>
-/* ---------------- PWA: inline manifest + service worker ---------------- */
+/* ---------------- PWA: Inline Manifest ---------------- */
 const manifest = {
   name: "مصروفاتي",
   short_name: "مصروفاتي",
   description: "تتبع مصروفاتك الشهرية بسهولة",
   start_url: ".",
   display: "standalone",
+  scope: "/", 
   background_color: "#F3F1E4",
   theme_color: "#F3F1E4",
   dir: "rtl",
@@ -367,33 +368,16 @@ const manifest = {
 document.getElementById('manifestLink').setAttribute('href',
   'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
 
+/* ---------------- Service Worker Registration ---------------- */
 if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE = 'masrofaty-v1';
-    self.addEventListener('install', e => { self.skipWaiting(); });
-    self.addEventListener('activate', e => { self.clients.claim(); });
-    self.addEventListener('fetch', e => {
-      e.respondWith(
-        caches.open(CACHE).then(async cache => {
-          try {
-            const res = await fetch(e.request);
-            if (e.request.method === 'GET') cache.put(e.request, res.clone());
-            return res;
-          } catch (err) {
-            const cached = await cache.match(e.request);
-            return cached || Response.error();
-          }
-        })
-      );
-    });
-  `;
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(blob);
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(swUrl).catch(()=>{});
+    navigator.serviceWorker.register('sw.js', { scope: '/' })
+      .then(() => console.log('SW registered'))
+      .catch(() => console.log('SW registration failed'));
   });
 }
 
+/* ---------------- Install Prompt ---------------- */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -410,7 +394,7 @@ document.getElementById('installBtn').addEventListener('click', async () => {
 
 /* ---------------- App logic ---------------- */
 const EXP_KEY = 'masrofaty_expenses_v1';
-const BUDGET_KEY = 'masrofaty_budgets_v1'; // { "2026-08": 5000 }
+const BUDGET_KEY = 'masrofaty_budgets_v1'; 
 
 const CATEGORIES = [
   { id:'food', label:'أكل', icon:'🍔' },
@@ -607,4 +591,3 @@ render();
 </script>
 </body>
 </html>
-
