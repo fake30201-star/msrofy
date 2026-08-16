@@ -349,7 +349,7 @@ const manifest = {
   name: "مصروفاتي",
   short_name: "مصروفاتي",
   description: "تتبع مصروفاتك الشهرية بسهولة",
-  start_url: ".",
+  start_url: "/",
   display: "standalone",
   scope: "/", 
   background_color: "#F3F1E4",
@@ -371,9 +371,10 @@ document.getElementById('manifestLink').setAttribute('href',
 /* ---------------- Service Worker Registration ---------------- */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js', { scope: '/' })
-      .then(() => console.log('SW registered'))
-      .catch(() => console.log('SW registration failed'));
+    // الرقم العشوائي "Date.now" بيجبر المتصفح ينزل نسخة جديدة فوراً
+    navigator.serviceWorker.register('sw.js?v=' + Date.now(), { scope: '/' })
+      .then(() => console.log('SW registered successfully'))
+      .catch((err) => console.log('SW registration failed:', err));
   });
 }
 
